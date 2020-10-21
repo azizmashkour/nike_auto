@@ -5,7 +5,22 @@ const schedule = require('node-schedule')
 const {installMouseHelper} = require('./extras/install_mouse_helper');
 require('dotenv').config()
 
-puppeteer.use(pluginStealth())
+var browser = null;
+async function runBrowser() {
+  browser = await puppeteer.launch({
+    ignoreDefaultArgs: ["--enable-automation"],
+    headless: false,
+    slowMo: 40,
+    args: [
+      "--start-maximized",
+      // '--user-agent='+userAgent+'',
+      "--window-size=1920,1040",
+      // '--disable-extensions-except=/opt/dev/proxmox-bots/buybots/bestbuy/ext/dsh,/opt/dev/proxmox-bots/buybots/bestbuy/ext/webrtc',
+      // '--load-extension=/opt/dev/proxmox-bots/buybots/bestbuy/ext/dsh,/opt/dev/proxmox-bots/buybots/bestbuy/ext/webrtc',
+      "--disable-infobars",
+    ],
+  });
+}
 
 const runSnkrBot = () => {
 
@@ -39,8 +54,8 @@ const runSnkrBot = () => {
 	*/
 	const date = new Date(2020, 4, 19, 23, 48, 30);
 
-	// url: url to the shoe page, e.g., 'https://www.nike.com/us/launch/t/kobe-4-protro-wizenard/'
-	const url = 'https://www.nike.com/ca/launch/t/air-jordan-1-court-purple';
+	// url: url to the shoe page, e.g., 'https://www.nike.com/za/launch/t/drifter-gator-ispa-coastal-blue-volt'
+	const url = 'https://www.nike.com/za/launch/t/drifter-gator-ispa-coastal-blue-volt';
 
 	// debug: Use debug/logging features?
 	// Includes writing updates to log file, writing html snapshots, and taking screenshots
@@ -58,13 +73,9 @@ const runSnkrBot = () => {
 	// ####################################
 	// main flow
 	(async () => { 
-
-		const browser = await puppeteer.launch({
-			ignoreHTTPSErrors: true,
-			headless: false
-		});
-
+		await runBrowser();
 		const page = await browser.newPage();
+		await page.setViewport({ width: 1920, height: 800 });
 		
 		if(debug == true){	
 			await installMouseHelper(page); // Makes mouse visible
@@ -88,9 +99,7 @@ const runSnkrBot = () => {
 		}
 			
 		await page.goto(url);
-		page.waitForNavigation({ waitUntil: 'networkidle0' }); // Wait for page to finish loading
-		
-
+		await page.waitFor(3000);
 		
 		// ##################################################
 		// ##################################################
@@ -105,34 +114,30 @@ const runSnkrBot = () => {
 			page.screenshot({path: screenshot_path + "_1_loaded_" + Math.floor(new Date() / 1000) + '.png'});
 		}
 		//#### LOG / DEBUG END
-		await page.waitFor(500);
+		await page.waitFor(3000);
 		
 
 		// #### Login to Account
-		await page.waitForSelector('button[data-qa="top-nav-join-or-login-button"]');
-		console.log('Login button loaded')
+		await page.waitForSelector('[class*="join-log-in"]');
+		await page.click('[class*="join-log-in"]');
+		await page.waitFor(3000);
 
-		await page.evaluate(() => 
-		document.querySelectorAll('button[data-qa="top-nav-join-or-login-button"]')[0].click())
-		console.log("Testing login")
-
-		await page.waitForSelector('.emailAddress');
-		await page.waitFor(500);
-			
 		// Username
-		await page.focus('.emailAddress > input');
-		await page.keyboard.type(email);
-		await page.waitFor(200);
+		await page.waitForSelector('[data-componentname="emailAddress"]');
+		await page.type(
+			'[data-componentname="emailAddress"]',
+			email,
+			{ delay: 5 }
+		);
+		await page.waitFor(3000);
 			
 		// Password
-		await page.focus('.password > input')
-		await page.keyboard.type(pass);
-		await page.waitFor(200);
-			
+		await page.type('[data-componentname="password"]', pass, {
+			delay: 5,
+		});
+		await page.waitFor(500);
 		// Submit
-		await page.evaluate(() =>
-			document.querySelectorAll(".loginSubmit > input")[0].click()
-		);	
+		await page.click('[value="SIGN IN"]');
 		
 		//#### LOG / DEBUG
 		if(debug == true){	
