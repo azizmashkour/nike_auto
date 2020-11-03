@@ -8,6 +8,7 @@ require('dotenv').config()
 var browser = null;
 async function runBrowser() {
   browser = await puppeteer.launch({
+<<<<<<< HEAD
     ignoreDefaultArgs: ["--enable-automation"],
     headless: false,
     slowMo: 40,
@@ -18,6 +19,17 @@ async function runBrowser() {
       // '--disable-extensions-except=/opt/dev/proxmox-bots/buybots/bestbuy/ext/dsh,/opt/dev/proxmox-bots/buybots/bestbuy/ext/webrtc',
       // '--load-extension=/opt/dev/proxmox-bots/buybots/bestbuy/ext/dsh,/opt/dev/proxmox-bots/buybots/bestbuy/ext/webrtc',
       "--disable-infobars",
+=======
+	ignoreDefaultArgs: ["--enable-automation"],
+	ignoreHTTPSErrors: true,
+    headless: false,
+    slowMo: 40,
+    args: [	  
+	  '--disable-dev-shm-usage',
+      "--start-maximized",
+      "--window-size=1920,1040",
+	  "--disable-infobars"
+>>>>>>> a6d0d98820a0d6645b7e39f6e59338d9709cd8ad
     ],
   });
 }
@@ -47,7 +59,7 @@ const runSnkrBot = () => {
 	const cv_code = process.env.CV_CODE
 
 	// size: the shoe size, as you see in the table of sizes on a product page, e.g., 'M 9 / W 10.5'
-	const size = 'US M 9.5 / W 11';
+	const size = 'UK 9.5';
 
 	/* date: the date and time the shoe is being dropped at. Months will begin at zero so be sure to subratct one from any month.
 		Date format should be as follows: (year, month - 1, day, hour, minute, seconds) 
@@ -98,10 +110,21 @@ const runSnkrBot = () => {
 			
 		}
 			
+<<<<<<< HEAD
 		await page.goto(url);
+=======
+		try {
+			await page.goto(url,{
+				waitUntil: 'networkidle0', timeout:0
+			});
+		} catch (error) {
+			console.log("No free item exists");
+		}
+	
+>>>>>>> a6d0d98820a0d6645b7e39f6e59338d9709cd8ad
 		await page.waitFor(3000);
 		
-		// ##################################################
+		// #####################s#############################
 		// ##################################################
 		// ################################## ROUND 1
 		// BEGIN
@@ -114,11 +137,24 @@ const runSnkrBot = () => {
 			page.screenshot({path: screenshot_path + "_1_loaded_" + Math.floor(new Date() / 1000) + '.png'});
 		}
 		//#### LOG / DEBUG END
+<<<<<<< HEAD
 		await page.waitFor(3000);
 		
 
 		// #### Login to Account
 		await page.waitForSelector('[class*="join-log-in"]');
+=======
+		
+
+		// #### Login to Account
+		try {
+			await page.waitForSelector(
+				'[class*="join-log-in"]'
+			);
+		} catch (error) {
+			
+		}
+>>>>>>> a6d0d98820a0d6645b7e39f6e59338d9709cd8ad
 		await page.click('[class*="join-log-in"]');
 		await page.waitFor(3000);
 
@@ -146,9 +182,9 @@ const runSnkrBot = () => {
 			fs.writeFileSync(html_path + "_2_logged_in__" + Math.floor(new Date() / 1000) + ".html", html);
 			page.screenshot({path: screenshot_path + "_2_logged_in_" + Math.floor(new Date() / 1000) + '.png'});
 		}
-		//#### LOG / DEBUG END
+		// //#### LOG / DEBUG END
 			
-		await page.waitFor(500);	
+		await page.waitFor(3000);	
 		
 
 
@@ -157,17 +193,20 @@ const runSnkrBot = () => {
 		// ##################################################
 		// ################################## ROUND 2	
 		// Wait for size selector to appear, then scroll to it
-		schedule.scheduleJob(date, async () => {
-			console.log("testing schedule")
+		// schedule.scheduleJob(date, async () => {
+		// 	console.log("testing schedule")
 
-		})
+		// })
 		
 
-		
-		await page.waitForSelector('.size-grid-dropdown');
-		await page.evaluate(() =>
-			document.querySelectorAll(".size-grid-dropdown")[0].scrollIntoView()
-		);
+		try {
+			await page.waitForSelector('.size-grid-dropdown');
+			await page.evaluate(() =>
+				document.querySelectorAll(".size-grid-dropdown")[0].scrollIntoView()
+			);
+		} catch (error) {
+			console.log(error)
+		}
 		
 		// #### LOG / DEBUG
 		if(debug == true){	
@@ -178,7 +217,7 @@ const runSnkrBot = () => {
 		}
 		//#### LOG / DEBUG END
 		
-		await page.waitFor(500);
+		await page.waitFor(3000);
 		
 
 
@@ -187,7 +226,6 @@ const runSnkrBot = () => {
 		// ################################## ROUND 3
 		// Pick my size from the options
 		
-		
 		await page.evaluate(async(size) => {
 			let sizes = Array.from(document.querySelectorAll(".size-grid-dropdown"));
 			let sizeIndex = sizes
@@ -195,7 +233,6 @@ const runSnkrBot = () => {
 				.filter(Boolean)[0];
 			return sizes[sizeIndex].click();
 		}, size);
-		
 		
 		//#### LOG / DEBUG
 		if(debug == true){	
@@ -220,6 +257,7 @@ const runSnkrBot = () => {
 		await page.evaluate(() =>
 			document.querySelectorAll('button[data-qa="add-to-cart"]')[0].scrollIntoView()
 		);
+		console.log("***************************ddddd******")
 		
 		//#### LOG / DEBUG
 		if(debug == true){	
@@ -257,18 +295,27 @@ const runSnkrBot = () => {
 		await page.waitFor(500);	
 		
 		
-		
-		
+		//Press Member Checkout
+
+		try {
+			await page.waitForSelector("button[data-qa='checkout-link']");
+			await page.evaluate(() =>
+				document.querySelectorAll("button[data-qa='checkout-link']")[0].click()
+			);
+		} catch (error) {
+			console.log(error)
+		}
+
+
 		// ##################################################
 		// ##################################################
 		// ################################## ROUND 7
 		// Enter credit card info
 		
-		await page.waitForSelector('.credit-card-iframe');
-		await page.waitForSelector('.credit-card-iframe');
+		
 		
 		await page.evaluate(() =>
-			document.querySelectorAll(".credit-card-iframe")[0].scrollIntoView()
+			document.querySelectorAll('[data-automation="member-checkout-button"]')[0].scrollIntoView()
 		);
 		await page.waitFor(200);
 		
@@ -340,7 +387,7 @@ const runSnkrBot = () => {
 			
 		}
 		
-		//await browser.close();
+		await browser.close();
 	})();
 }
 
